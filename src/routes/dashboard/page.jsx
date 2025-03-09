@@ -20,10 +20,10 @@ const DashboardPage = () => {
                         <div className="w-fit rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
                             <Package size={26} />
                         </div>
-                        <p className="card-title">Total Products</p>
+                        <p className="card-title">Total Produk</p>
                     </div>
                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
-                        <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">25,154</p>
+                        <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">1.200</p>
                         <span className="flex w-fit items-center gap-x-2 rounded-full border border-blue-500 px-2 py-1 font-medium text-blue-500 dark:border-blue-600 dark:text-blue-600">
                             <TrendingUp size={18} />
                             25%
@@ -33,12 +33,12 @@ const DashboardPage = () => {
                 <div className="card">
                     <div className="card-header">
                         <div className="rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
-                            <DollarSign size={26} />
+                            <Users size={26} />
                         </div>
-                        <p className="card-title">Total Paid Orders</p>
+                        <p className="card-title">Total Customer</p>
                     </div>
                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
-                        <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">$16,000</p>
+                        <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">16,000</p>
                         <span className="flex w-fit items-center gap-x-2 rounded-full border border-blue-500 px-2 py-1 font-medium text-blue-500 dark:border-blue-600 dark:text-blue-600">
                             <TrendingUp size={18} />
                             12%
@@ -48,12 +48,12 @@ const DashboardPage = () => {
                 <div className="card">
                     <div className="card-header">
                         <div className="rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
-                            <Users size={26} />
+                            <TrendingUp size={26} />
                         </div>
-                        <p className="card-title">Total Customers</p>
+                        <p className="card-title">Transaksi Pending</p>
                     </div>
                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
-                        <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">15,400k</p>
+                        <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">500</p>
                         <span className="flex w-fit items-center gap-x-2 rounded-full border border-blue-500 px-2 py-1 font-medium text-blue-500 dark:border-blue-600 dark:text-blue-600">
                             <TrendingUp size={18} />
                             15%
@@ -65,7 +65,7 @@ const DashboardPage = () => {
                         <div className="rounded-lg bg-blue-500/20 p-2 text-blue-500 transition-colors dark:bg-blue-600/20 dark:text-blue-600">
                             <CreditCard size={26} />
                         </div>
-                        <p className="card-title">Sales</p>
+                        <p className="card-title">Transaksi Success</p>
                     </div>
                     <div className="card-body bg-slate-100 transition-colors dark:bg-slate-950">
                         <p className="text-3xl font-bold text-slate-900 transition-colors dark:text-slate-50">12,340</p>
@@ -147,7 +147,7 @@ const DashboardPage = () => {
                 </div>
                 <div className="card col-span-1 md:col-span-2 lg:col-span-3">
                     <div className="card-header">
-                        <p className="card-title">Recent Sales</p>
+                        <p className="card-title">Riwayat Transaksi</p>
                     </div>
                     <div className="card-body h-[300px] overflow-auto p-0">
                         {recentSalesData.map((sale) => (
