@@ -62,8 +62,11 @@ const DashboardPage = () => {
         if (!selectedProduct) return;
         await deleteDoc(doc(db, "products", selectedProduct.id));
         setIsDeleteModalOpen(false);
-        window.location.reload();
+        
+        // Update state tanpa reload halaman
+        setProducts(products.filter(product => product.id !== selectedProduct.id));
     };
+    
 
     return (
         <div className="flex flex-col gap-y-4">
