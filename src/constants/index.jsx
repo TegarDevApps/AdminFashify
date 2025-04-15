@@ -12,16 +12,6 @@ export const navbarLinks = [
                 icon: Home,
                 path: "/",
             },
-            {
-                label: "Analytics",
-                icon: ChartColumn,
-                path: "/analytics",
-            },
-            {
-                label: "Reports",
-                icon: NotepadText,
-                path: "/reports",
-            },
         ],
     },
     {
@@ -31,17 +21,17 @@ export const navbarLinks = [
                 label: "Customers",
                 icon: Users,
                 path: "/customers",
-            },
+            }
+        ],
+    },
+    {
+        title: "Transactions",
+        links: [
             {
-                label: "New customer",
-                icon: UserPlus,
-                path: "/new-customer",
-            },
-            {
-                label: "Verified customers",
-                icon: UserCheck,
-                path: "/verified-customers",
-            },
+                label: "Transactions",
+                icon: Users,
+                path: "/transactions",
+            }
         ],
     },
     {
@@ -56,21 +46,6 @@ export const navbarLinks = [
                 label: "New product",
                 icon: PackagePlus,
                 path: "/new-product",
-            },
-            {
-                label: "Inventory",
-                icon: ShoppingBag,
-                path: "/inventory",
-            },
-        ],
-    },
-    {
-        title: "Settings",
-        links: [
-            {
-                label: "Settings",
-                icon: Settings,
-                path: "/settings",
             },
         ],
     },
