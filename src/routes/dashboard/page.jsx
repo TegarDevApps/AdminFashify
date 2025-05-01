@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Area, AreaChart, Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useTheme } from "@/hooks/use-theme";
 import { Footer } from "@/layouts/footer";
-import { CreditCard, DollarSign, Package, Users, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
+import { CreditCard, Package, Users, TrendingUp, ArrowUp, ArrowDown } from "lucide-react";
 import { db } from "../db/firebase";
-import { collection, getDocs, query, where, orderBy, limit, Timestamp } from "firebase/firestore";
+import { collection, getDocs} from "firebase/firestore";
+import { DashboardFilter } from "./filter";
 
 const DashboardPage = () => {
     const { theme } = useTheme();
@@ -23,6 +24,8 @@ const DashboardPage = () => {
     const [paymentMethodData, setPaymentMethodData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [dateFilter, setDateFilter] = useState({ type: "all", startDate: null, endDate: null });
+
 
     // Colors for pie chart
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -30,26 +33,61 @@ const DashboardPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch total products
+                setLoading(true);
+                
+                // Fetch all collections
                 const productsRef = collection(db, "products");
-                const productsSnapshot = await getDocs(productsRef);
-                const totalProducts = productsSnapshot.size;
-
-                // Fetch total customers
                 const usersRef = collection(db, "users");
-                const usersSnapshot = await getDocs(usersRef);
-                const totalCustomers = usersSnapshot.size;
-
-                // Fetch all transactions
                 const transactionsRef = collection(db, "transactions");
-                const transactionsSnapshot = await getDocs(transactionsRef);
                 
-                const allTransactions = transactionsSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+                // Get all documents
+                const [productsSnapshot, usersSnapshot, transactionsSnapshot] = await Promise.all([
+                    getDocs(productsRef),
+                    getDocs(usersRef),
+                    getDocs(transactionsRef),
+                ]);
                 
-                // Count pending and success transactions
+                // Convert transactions to array with dates
+                const allTransactions = transactionsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        date: data.createdAt?.toDate() || new Date(),
+                        formattedDate: data.createdAt ? formatDate(data.createdAt.toDate()) : 'N/A'
+                    };
+                });
+                
+                // ---- FILTER DATA BASED ON DATE FILTER ----
+                const filteredTransactions = filterDataByDate(allTransactions, dateFilter);
+                
+                // Filter products and users based on date
+                const productsWithDates = productsSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        date: data.createdAt?.toDate() || new Date()
+                    };
+                });
+                
+                const usersWithDates = usersSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        id: doc.id,
+                        ...data,
+                        date: data.createdAt?.toDate() || new Date()
+                    };
+                });
+                
+                const filteredProducts = filterDataByDate(productsWithDates, dateFilter);
+                const filteredUsers = filterDataByDate(usersWithDates, dateFilter);
+                
+                // Count products and users
+                const totalProducts = filteredProducts.length;
+                const totalCustomers = filteredUsers.length;
+                
+                // Count transaction statuses
                 let pendingTransactions = 0;
                 let successTransactions = 0;
                 
@@ -57,7 +95,7 @@ const DashboardPage = () => {
                 const paymentMethods = {};
                 
                 // Monthly sales data
-                const monthlySales = {};
+                const salesByMonth = {};
                 
                 // Current date for percentage calculations
                 const currentDate = new Date();
@@ -69,17 +107,11 @@ const DashboardPage = () => {
                 let prevMonthSuccessTransactions = 0;
                 let prevMonthCustomers = new Set();
                 
-                allTransactions.forEach((transaction) => {
-                    const transactionDate = transaction.createdAt?.toDate() || new Date();
-                    
+                // Process all transactions for counting statuses
+                filteredTransactions.forEach((transaction) => {
                     // Count by status
                     if (transaction.status === "pending") {
                         pendingTransactions++;
-                        
-                        // Check if from previous month
-                        if (transactionDate < oneMonthAgo) {
-                            prevMonthPendingTransactions++;
-                        }
                     } else if (transaction.status === "success") {
                         successTransactions++;
                         
@@ -88,21 +120,27 @@ const DashboardPage = () => {
                         paymentMethods[paymentType] = (paymentMethods[paymentType] || 0) + 1;
                         
                         // Add to monthly sales
-                        const monthKey = `${transactionDate.getFullYear()}-${transactionDate.getMonth() + 1}`;
-                        monthlySales[monthKey] = (monthlySales[monthKey] || 0) + (transaction.totalAmount || 0);
-                        
-                        // Check if from previous month
-                        if (transactionDate < oneMonthAgo) {
-                            prevMonthSuccessTransactions++;
-                        }
+                        const monthKey = `${transaction.date.getFullYear()}-${transaction.date.getMonth() + 1}`;
+                        salesByMonth[monthKey] = (salesByMonth[monthKey] || 0) + (transaction.totalAmount || 0);
                     }
                     
                     // Track unique customers for previous month
-                    if (transaction.userId && transactionDate < oneMonthAgo) {
+                    if (transaction.userId && transaction.date < oneMonthAgo) {
                         prevMonthCustomers.add(transaction.userId);
                     }
                 });
-
+                
+                // Calculate previous month stats for comparison
+                allTransactions.forEach((transaction) => {
+                    if (transaction.date < oneMonthAgo) {
+                        if (transaction.status === "pending") {
+                            prevMonthPendingTransactions++;
+                        } else if (transaction.status === "success") {
+                            prevMonthSuccessTransactions++;
+                        }
+                    }
+                });
+                
                 // Calculate percentage changes
                 const pendingTransactionsPercentage = prevMonthPendingTransactions === 0 
                     ? 100 
@@ -118,7 +156,7 @@ const DashboardPage = () => {
                 
                 // For products, assume 5% growth as we don't have historical data
                 const totalProductsPercentage = 5;
-
+                
                 setStats({
                     totalProducts,
                     totalCustomers,
@@ -129,26 +167,15 @@ const DashboardPage = () => {
                     totalProductsPercentage: Math.round(totalProductsPercentage),
                     totalCustomersPercentage: Math.round(totalCustomersPercentage)
                 });
-
-                // Fetch recent transactions
-                const recentTransactionsQuery = query(
-                    collection(db, "transactions"),
-                    orderBy("createdAt", "desc"),
-                    limit(10)
-                );
                 
-                const recentTransactionsSnapshot = await getDocs(recentTransactionsQuery);
-                const transactionsList = recentTransactionsSnapshot.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        ...data,
-                        formattedDate: data.createdAt ? formatDate(data.createdAt.toDate()) : 'N/A'
-                    };
-                });
+                // Set recent transactions - use the filtered transactions
+                // Sort by date descending and limit to 10
+                const sortedRecentTransactions = [...filteredTransactions]
+                    .sort((a, b) => b.date - a.date)
+                    .slice(0, 10);
                 
-                setRecentTransactions(transactionsList);
-
+                setRecentTransactions(sortedRecentTransactions);
+                
                 // Prepare sales data for chart - last 6 months
                 const last6Months = [];
                 for (let i = 5; i >= 0; i--) {
@@ -158,7 +185,7 @@ const DashboardPage = () => {
                     
                     last6Months.push({
                         name: date.toLocaleString('default', { month: 'short' }),
-                        total: monthlySales[monthKey] || 0
+                        total: salesByMonth[monthKey] || 0
                     });
                 }
                 
@@ -179,9 +206,26 @@ const DashboardPage = () => {
                 setLoading(false);
             }
         };
-
+        
         fetchData();
-    }, []);
+    }, [dateFilter]);
+
+    // Function to filter data by date
+    const filterDataByDate = (data, filter) => {
+        if (!filter.startDate || !filter.endDate) {
+            return data; // Return all data
+        }
+        
+        return data.filter(item => {
+            const itemDate = item.date || item.createdAt?.toDate() || new Date();
+            return itemDate >= filter.startDate && itemDate <= filter.endDate;
+        });
+    };
+
+    const handleFilterChange = (filter) => {
+        console.log("Filter changed:", filter);
+        setDateFilter(filter);
+    };
 
     const formatDate = (date) => {
         return new Intl.DateTimeFormat('id-ID', {
@@ -208,6 +252,8 @@ const DashboardPage = () => {
     return (
         <div className="flex flex-col gap-y-4">
             <h1 className="title">Dashboard</h1>
+            <DashboardFilter onFilterChange={handleFilterChange} />
+            
             {loading ? (
                 <div className="text-center py-10">
                     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
@@ -530,5 +576,6 @@ const DashboardPage = () => {
         </div>
     );
 };
+
 
 export default DashboardPage;

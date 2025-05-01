@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../../db/firebase";
 import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { Link } from "react-router-dom";
 import { PencilLine, Trash } from "lucide-react";
 
 const DashboardPage = () => {
